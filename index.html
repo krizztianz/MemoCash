@@ -1,0 +1,678 @@
+<!DOCTYPE html>
+<html lang="en">
+<head>
+    <meta charset="UTF-8">
+    <meta name="viewport" content="width=device-width, initial-scale=1.0">
+    <title>Finstory</title>
+    <style>
+        * {
+            box-sizing: border-box;
+            margin: 0;
+            padding: 0;
+            font-family: 'Segoe UI', Tahoma, Geneva, Verdana, sans-serif;
+        }
+        
+        body {
+            background-color: #f8f9fa;
+            color: #333;
+            line-height: 1.6;
+            padding: 20px;
+        }
+        
+        .header {
+            display: flex;
+            justify-content: space-between;
+            align-items: center;
+            margin-bottom: 30px;
+        }
+        
+        .header h1 {
+            color: #2c3e50;
+            font-size: 2rem;
+            margin: 0;
+        }
+        
+        .add-btn {
+            background-color: #3498db;
+            color: white;
+            border: none;
+            padding: 10px 20px;
+            border-radius: 5px;
+            cursor: pointer;
+            font-size: 1rem;
+            display: flex;
+            align-items: center;
+            gap: 8px;
+        }
+        
+        .add-btn i {
+            font-size: 1.2rem;
+        }
+        
+        .months-grid {
+            display: grid;
+            grid-template-columns: repeat(5, 1fr);
+            gap: 15px;
+            margin-bottom: 30px;
+        }
+        
+        .month-card {
+            background-color: white;
+            border-radius: 8px;
+            padding: 15px;
+            box-shadow: 0 2px 5px rgba(0,0,0,0.1);
+            text-align: center;
+            cursor: pointer;
+            transition: transform 0.2s;
+        }
+        
+        .month-card:hover {
+            transform: translateY(-3px);
+            box-shadow: 0 4px 8px rgba(0,0,0,0.1);
+        }
+        
+        .month-card.locked {
+            position: relative;
+            opacity: 0.7;
+        }
+        
+        .month-card.locked::after {
+            content: '🔒';
+            position: absolute;
+            top: 10px;
+            right: 10px;
+        }
+        
+        .transactions {
+            background-color: white;
+            border-radius: 8px;
+            padding: 20px;
+            box-shadow: 0 2px 5px rgba(0,0,0,0.1);
+            margin-bottom: 30px;
+        }
+        
+        .transactions h2 {
+            color: #2c3e50;
+            margin-bottom: 15px;
+            font-size: 1.5rem;
+        }
+        
+        .transactions-table {
+            width: 100%;
+            border-collapse: collapse;
+        }
+        
+        .transactions-table th {
+            background-color: #3498db;
+            color: white;
+            padding: 12px 15px;
+            text-align: left;
+        }
+        
+        .transactions-table td {
+            padding: 12px 15px;
+            border-bottom: 1px solid #eee;
+        }
+        
+        .transactions-table tr:last-child td {
+            border-bottom: none;
+        }
+        
+        .transaction-amount {
+            font-weight: bold;
+            color: #27ae60;
+        }
+        
+        .transaction-amount.negative {
+            color: #e74c3c;
+        }
+        
+        .final-amount-row {
+            font-weight: bold;
+            background-color: #f8f9fa;
+        }
+        
+        .final-amount {
+            font-weight: bold;
+            color: #2c3e50;
+        }
+        
+        /* Popup Styles */
+        .popup-overlay {
+            position: fixed;
+            top: 0;
+            left: 0;
+            right: 0;
+            bottom: 0;
+            background-color: rgba(0,0,0,0.5);
+            display: flex;
+            justify-content: center;
+            align-items: center;
+            z-index: 1000;
+            opacity: 0;
+            visibility: hidden;
+            transition: all 0.3s;
+        }
+        
+        .popup-overlay.active {
+            opacity: 1;
+            visibility: visible;
+        }
+        
+        .popup {
+            background-color: white;
+            width: 100%;
+            max-width: 400px;
+            border-radius: 8px;
+            padding: 20px;
+            box-shadow: 0 5px 15px rgba(0,0,0,0.2);
+            transform: translateY(-20px);
+            transition: transform 0.3s;
+        }
+        
+        .popup-overlay.active .popup {
+            transform: translateY(0);
+        }
+        
+        .popup-header {
+            display: flex;
+            justify-content: space-between;
+            align-items: center;
+            margin-bottom: 20px;
+        }
+        
+        .popup-header h2 {
+            color: #2c3e50;
+            margin: 0;
+            font-size: 1.5rem;
+        }
+        
+        .close-btn {
+            background: none;
+            border: none;
+            font-size: 1.5rem;
+            cursor: pointer;
+            color: #7f8c8d;
+        }
+        
+        .form-group {
+            margin-bottom: 15px;
+        }
+        
+        .form-group label {
+            display: block;
+            margin-bottom: 5px;
+            font-weight: 600;
+            color: #2c3e50;
+        }
+        
+        .form-group input,
+        .form-group select {
+            width: 100%;
+            padding: 10px;
+            border: 1px solid #ddd;
+            border-radius: 4px;
+            font-size: 1rem;
+        }
+        
+        .submit-btn {
+            background-color: #2ecc71;
+            color: white;
+            border: none;
+            padding: 12px 20px;
+            border-radius: 4px;
+            cursor: pointer;
+            font-size: 1rem;
+            width: 100%;
+            transition: background-color 0.2s;
+        }
+        
+        .submit-btn:hover {
+            background-color: #27ae60;
+        }
+        
+        /* Loading Screen */
+        .loading-overlay {
+            position: fixed;
+            top: 0;
+            left: 0;
+            right: 0;
+            bottom: 0;
+            display: flex;
+            justify-content: center;
+            align-items: center;
+            background-color: rgba(255, 255, 255, 0.8);
+            z-index: 1001;
+        }
+        
+        .spinner {
+            width: 50px;
+            height: 50px;
+            border: 5px solid #f3f3f3;
+            border-top: 5px solid #3498db;
+            border-radius: 50%;
+            animation: spin 1s linear infinite;
+        }
+        
+        @keyframes spin {
+            0% { transform: rotate(0deg); }
+            100% { transform: rotate(360deg); }
+        }
+        
+        /* Alert styles */
+        .alert-overlay {
+            position: fixed;
+            top: 0;
+            left: 0;
+            right: 0;
+            bottom: 0;
+            background-color: rgba(0,0,0,0.5);
+            display: flex;
+            justify-content: center;
+            align-items: center;
+            z-index: 1002;
+            opacity: 0;
+            visibility: hidden;
+            transition: all 0.3s;
+        }
+        
+        .alert-overlay.active {
+            opacity: 1;
+            visibility: visible;
+        }
+        
+        .alert-box {
+            background-color: white;
+            padding: 20px;
+            border-radius: 8px;
+            width: 90%;
+            max-width: 400px;
+            text-align: center;
+            box-shadow: 0 5px 15px rgba(0,0,0,0.2);
+            transform: translateY(-20px);
+            transition: transform 0.3s;
+        }
+        
+        .alert-overlay.active .alert-box {
+            transform: translateY(0);
+        }
+        
+        .alert-header {
+            margin-bottom: 15px;
+        }
+        
+        .alert-icon {
+            font-size: 2.5rem;
+            margin-bottom: 10px;
+        }
+        
+        .alert-icon.error {
+            color: #e74c3c;
+        }
+        
+        .alert-icon.success {
+            color: #2ecc71;
+        }
+        
+        .alert-icon.warning {
+            color: #f39c12;
+        }
+        
+        .alert-icon.info {
+            color: #3498db;
+        }
+        
+        .alert-title {
+            font-size: 1.3rem;
+            margin-bottom: 10px;
+            color: #2c3e50;
+        }
+        
+        .alert-message {
+            margin-bottom: 20px;
+        }
+        
+        .alert-ok {
+            background-color: #3498db;
+            color: white;
+            border: none;
+            padding: 8px 15px;
+            border-radius: 4px;
+            cursor: pointer;
+        }
+        
+        /* Responsive adjustments */
+        @media (max-width: 768px) {
+            .months-grid {
+                grid-template-columns: repeat(3, 1fr);
+            }
+        }
+        
+        @media (max-width: 480px) {
+            .months-grid {
+                grid-template-columns: repeat(2, 1fr);
+            }
+            
+            .header {
+                flex-direction: column;
+                align-items: flex-start;
+                gap: 15px;
+            }
+        }
+    </style>
+    <link rel="stylesheet" href="https://cdnjs.cloudflare.com/ajax/libs/font-awesome/6.0.0-beta3/css/all.min.css">
+</head>
+<body>
+    <!-- Loading Screen -->
+    <div class="loading-overlay" id="loadingOverlay">
+        <div class="spinner"></div>
+    </div>
+    
+    <!-- Alert Popup -->
+    <div class="alert-overlay" id="alertOverlay">
+        <div class="alert-box">
+            <div class="alert-header">
+                <div class="alert-icon" id="alertIcon">
+                    <i class="fas fa-exclamation-circle"></i>
+                </div>
+                <h3 class="alert-title" id="alertTitle">Alert Title</h3>
+            </div>
+            <p class="alert-message" id="alertMessage">Alert message goes here</p>
+            <button class="alert-ok" id="alertOk">OK</button>
+        </div>
+    </div>
+
+    <!-- Transaction Popup -->
+    <div class="popup-overlay" id="popupOverlay">
+        <div class="popup">
+            <div class="popup-header">
+                <h2>Add Transaction</h2>
+                <button class="close-btn" id="closeBtn">&times;</button>
+            </div>
+            <form id="transactionForm">
+                <div class="form-group">
+                    <label for="amount">Amount (Rp)</label>
+                    <input type="text" id="amount" placeholder="Enter amount" required>
+                </div>
+                <div class="form-group">
+                    <label for="description">Description</label>
+                    <input type="text" id="description" placeholder="Enter description" required>
+                </div>
+                <div class="form-group">
+                    <label for="type">Type</label>
+                    <select id="type" required>
+                        <option value="">Select type</option>
+                        <option value="debit">Debit</option>
+                        <option value="credit">Credit</option>
+                    </select>
+                </div>
+                <button type="submit" class="submit-btn">
+                    <i class="fas fa-plus"></i> Add Transaction
+                </button>
+            </form>
+        </div>
+    </div>
+
+    <div class="container" id="mainContainer">
+        <div class="header">
+            <h1>Finstory</h1>
+            <button class="add-btn" id="addBtn">
+                <i class="fas fa-plus"></i> Add Transaction
+            </button>
+        </div>
+        
+        <div class="months-grid">
+            <div class="month-card locked">January 2025</div>
+            <div class="month-card locked">February 2025</div>
+            <div class="month-card locked">March 2025</div>
+            <div class="month-card locked">April 2025</div>
+            <div class="month-card locked">May 2025</div>
+            <div class="month-card">June 2025</div>
+            <div class="month-card">July 2025</div>
+            <div class="month-card">August 2025</div>
+            <div class="month-card">September 2025</div>
+            <div class="month-card">October 2025</div>
+        </div>
+        
+        <div class="transactions">
+            <h2>Recent Transactions</h2>
+            <table class="transactions-table">
+                <thead>
+                    <tr>
+                        <th>Description</th>
+                        <th>Amount (Rp)</th>
+                        <th>Debit</th>
+                        <th>Credit</th>
+                    </tr>
+                </thead>
+                <tbody id="transactionsList">
+                    <!-- Transactions will be added here -->
+                </tbody>
+                <tfoot>
+                    <tr class="final-amount-row">
+                        <td colspan="3">Final Amount</td>
+                        <td class="final-amount" id="finalAmount">Rp. 0</td>
+                    </tr>
+                </tfoot>
+            </table>
+        </div>
+    </div>
+
+    <script>
+        // DOM Elements
+        const loadingOverlay = document.getElementById('loadingOverlay');
+        const alertOverlay = document.getElementById('alertOverlay');
+        const alertIcon = document.getElementById('alertIcon');
+        const alertTitle = document.getElementById('alertTitle');
+        const alertMessage = document.getElementById('alertMessage');
+        const alertOk = document.getElementById('alertOk');
+        const popupOverlay = document.getElementById('popupOverlay');
+        const addBtn = document.getElementById('addBtn');
+        const closeBtn = document.getElementById('closeBtn');
+        const transactionForm = document.getElementById('transactionForm');
+        const amountInput = document.getElementById('amount');
+        const transactionsList = document.getElementById('transactionsList');
+        const finalAmount = document.getElementById('finalAmount');
+        
+        // Track transactions
+        let transactions = [];
+        let balance = 0;
+        
+        // Initialize app
+        document.addEventListener('DOMContentLoaded', function() {
+            // Hide loading screen after delay
+            setTimeout(() => {
+                loadingOverlay.style.display = 'none';
+            }, 1500);
+            
+            // Load sample transactions
+            loadSampleTransactions();
+            updateFinalAmount();
+        });
+        
+        // Show alert function with icons
+        function showAlert(type, title, message) {
+            // Set icon based on alert type
+            alertIcon.innerHTML = '';
+            const icon = document.createElement('i');
+            
+            switch(type.toLowerCase()) {
+                case 'error':
+                    icon.className = 'fas fa-exclamation-circle';
+                    alertIcon.className = 'alert-icon error';
+                    break;
+                case 'success':
+                    icon.className = 'fas fa-check-circle';
+                    alertIcon.className = 'alert-icon success';
+                    break;
+                case 'warning':
+                    icon.className = 'fas fa-exclamation-triangle';
+                    alertIcon.className = 'alert-icon warning';
+                    break;
+                case 'info':
+                    icon.className = 'fas fa-info-circle';
+                    alertIcon.className = 'alert-icon info';
+                    break;
+                default:
+                    icon.className = 'fas fa-exclamation-circle';
+                    alertIcon.className = 'alert-icon';
+            }
+            
+            alertIcon.appendChild(icon);
+            alertTitle.textContent = title;
+            alertMessage.textContent = message;
+            alertOverlay.classList.add('active');
+        }
+        
+        // Close alert
+        alertOk.addEventListener('click', function() {
+            alertOverlay.classList.remove('active');
+        });
+        
+        // Handle locked month cards
+        document.querySelectorAll('.month-card.locked').forEach(card => {
+            card.addEventListener('click', function() {
+                showAlert('error', 'Book Locked', 'This month is locked and cannot be modified.');
+            });
+        });
+        
+        // Currency formatting for amount input
+        amountInput.addEventListener('input', function(e) {
+            let value = this.value.replace(/[^\d-]/g, '');
+            
+            // Handle negative sign
+            const isNegative = value.startsWith('-');
+            value = value.replace(/-/g, '');
+            
+            if (value) {
+                const formattedValue = (isNegative ? '-' : '') + 
+                    parseInt(value || '0').toLocaleString('id-ID');
+                this.value = formattedValue;
+            } else {
+                this.value = '';
+            }
+        });
+        
+        // Form submission
+        transactionForm.addEventListener('submit', function(e) {
+            e.preventDefault();
+            
+            const amount = parseCurrency(amountInput.value);
+            const description = document.getElementById('description').value;
+            const type = document.getElementById('type').value;
+            
+            if (!amount || !description || !type) {
+                showAlert('error', 'Error', 'Please fill all fields');
+                return;
+            }
+            
+            // Add transaction to list
+            addTransaction(amount, description, type);
+            
+            // Show success message
+            showAlert('success', 'Success', 
+                `Transaction added: Rp. ${formatCurrency(amount)}\n${description}`);
+            
+            // Reset form and close popup
+            this.reset();
+            popupOverlay.classList.remove('active');
+        });
+        
+        // Popup controls
+        addBtn.addEventListener('click', function() {
+            popupOverlay.classList.add('active');
+        });
+        
+        closeBtn.addEventListener('click', function() {
+            popupOverlay.classList.remove('active');
+        });
+        
+        popupOverlay.addEventListener('click', function(e) {
+            if (e.target === popupOverlay) {
+                popupOverlay.classList.remove('active');
+            }
+        });
+        
+        // Currency parsing and formatting functions
+        function parseCurrency(formattedValue) {
+            const isNegative = formattedValue.startsWith('-');
+            const absoluteValue = parseInt(formattedValue.replace(/[^\d]/g, ''), 10) || 0;
+            return isNegative ? -absoluteValue : absoluteValue;
+        }
+        
+        function formatCurrency(amount) {
+            const isNegative = amount < 0;
+            const absoluteValue = Math.abs(amount);
+            return (isNegative ? '-' : '') + absoluteValue.toLocaleString('id-ID');
+        }
+        
+        // Transaction management
+        function addTransaction(amount, description, type) {
+            const transaction = {
+                amount,
+                description,
+                type,
+                date: new Date()
+            };
+            
+            transactions.push(transaction);
+            
+            if (type === 'credit') {
+                balance += amount;
+            } else {
+                balance -= amount;
+            }
+            
+            renderTransactions();
+            updateFinalAmount();
+        }
+        
+        function renderTransactions() {
+            transactionsList.innerHTML = '';
+            
+            transactions.forEach(transaction => {
+                const row = document.createElement('tr');
+                const amountClass = transaction.amount < 0 ? 'transaction-amount negative' : 'transaction-amount';
+                
+                row.innerHTML = `
+                    <td>${transaction.description}</td>
+                    <td class="${amountClass}">Rp. ${formatCurrency(transaction.amount)}</td>
+                    <td>${transaction.type === 'debit' ? '✓' : ''}</td>
+                    <td>${transaction.type === 'credit' ? '✓' : ''}</td>
+                `;
+                
+                transactionsList.appendChild(row);
+            });
+        }
+        
+        function updateFinalAmount() {
+            const formattedBalance = formatCurrency(balance);
+            finalAmount.textContent = `Rp. ${formattedBalance}`;
+            
+            // Color the final amount based on balance
+            if (balance < 0) {
+                finalAmount.classList.add('transaction-amount', 'negative');
+                finalAmount.classList.remove('final-amount');
+            } else if (balance > 0) {
+                finalAmount.classList.add('transaction-amount');
+                finalAmount.classList.remove('negative', 'final-amount');
+            } else {
+                finalAmount.classList.add('final-amount');
+                finalAmount.classList.remove('transaction-amount', 'negative');
+            }
+        }
+        
+        function loadSampleTransactions() {
+            const sampleTransactions = [
+                { amount: 2500000, description: 'Project Payment', type: 'credit' },
+                { amount: 1500000, description: 'Client Invoice', type: 'credit' },
+                { amount: 1500000, description: 'Office Supplies', type: 'debit' }
+            ];
+            
+            sampleTransactions.forEach(tx => {
+                addTransaction(tx.amount, tx.description, tx.type);
+            });
+        }
+    </script>
+</body>
+</html>
