@@ -30,36 +30,38 @@
         </div>
     </div>
 
-    <!-- Transaction Popup -->
-    <div class="popup-overlay" id="popupOverlay">
+    <!-- Add Period Popup -->
+    <div class="popup-overlay" id="periodPopup">
         <div class="popup">
             <div class="popup-header">
-                <h2>Add Transaction</h2>
-                <button class="close-btn" id="closeBtn">&times;</button>
+                <h2>Add Period</h2>
+                <button class="close-btn" id="closePeriodBtn">&times;</button>
             </div>
-            <form id="transactionForm">
+            <form id="periodForm">
                 <div class="form-group">
-                    <label for="amount">Amount (Rp)</label>
-                    <input type="text" id="amount" placeholder="Enter amount" required>
-                </div>
-                <div class="form-group">
-                    <label for="description">Description</label>
-                    <input type="text" id="description" placeholder="Enter description" required>
-                </div>
-                <div class="form-group">
-                    <label for="date">Transaction Date</label>
-                    <input type="text" id="date" placeholder="Select date" required>
-                </div>
-                <div class="form-group">
-                    <label for="type">Type</label>
-                    <select id="type" required>
-                        <option value="">Select type</option>
-                        <option value="debit">Debit</option>
-                        <option value="credit">Credit</option>
+                    <label for="month">Month</label>
+                    <select id="month" required>
+                        <option value="">Select month</option>
+                        <option value="1">January</option>
+                        <option value="2">February</option>
+                        <option value="3">March</option>
+                        <option value="4">April</option>
+                        <option value="5">May</option>
+                        <option value="6">June</option>
+                        <option value="7">July</option>
+                        <option value="8">August</option>
+                        <option value="9">September</option>
+                        <option value="10">October</option>
+                        <option value="11">November</option>
+                        <option value="12">December</option>
                     </select>
                 </div>
+                <div class="form-group">
+                    <label for="year">Year</label>
+                    <select id="year" required></select>
+                </div>
                 <button type="submit" class="submit-btn">
-                    <i class="fas fa-plus"></i> Add Transaction
+                    <i class="fas fa-save"></i> Save Period
                 </button>
             </form>
         </div>
@@ -68,46 +70,15 @@
     <div class="container" id="mainContainer">
         <div class="header">
             <h1>Moneyory</h1>
-            <button class="add-btn" id="addBtn">
-                <i class="fas fa-plus"></i> Add Transaction
+            <button class="add-period-btn" id="addPeriodBtn">
+                <i class="fas fa-calendar-plus"></i> Add Period
             </button>
         </div>
 
         <div class="months-grid">
-            <div class="month-card locked">January 2025</div>
-            <div class="month-card locked">February 2025</div>
-            <div class="month-card locked">March 2025</div>
-            <div class="month-card locked">April 2025</div>
-            <div class="month-card locked">May 2025</div>
-            <div class="month-card">June 2025</div>
-            <div class="month-card">July 2025</div>
-            <div class="month-card">August 2025</div>
-            <div class="month-card">September 2025</div>
-            <div class="month-card">October 2025</div>
+            
         </div>
 
-        <div class="transactions">
-            <h2>Recent Transactions</h2>
-            <table class="transactions-table">
-                <thead>
-                    <tr>
-                        <th>Description</th>
-                        <th>Date</th>
-                        <th>Debit</th>
-                        <th>Credit</th>
-                    </tr>
-                </thead>
-                <tbody id="transactionsList">
-                    <!-- Transactions will be added here -->
-                </tbody>
-                <tfoot>
-                    <tr class="final-amount-row">
-                        <td colspan="3">Final Amount</td>
-                        <td class="final-amount" id="finalAmount">Rp. 0</td>
-                    </tr>
-                </tfoot>
-            </table>
-        </div>
     </div>
     <script src="https://cdn.jsdelivr.net/npm/flatpickr"></script>
     <script src="js/scripts.js"></script>

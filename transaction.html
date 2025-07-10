@@ -1,0 +1,103 @@
+<!DOCTYPE html>
+<html lang="en">
+
+<head>
+    <meta charset="UTF-8">
+    <meta name="viewport" content="width=device-width, initial-scale=1.0">
+    <title>Moneyory</title>
+    <link rel="stylesheet" href="css/styles.css">
+    <link rel="stylesheet" href="https://cdnjs.cloudflare.com/ajax/libs/font-awesome/6.0.0-beta3/css/all.min.css">
+    <link rel="stylesheet" href="https://cdn.jsdelivr.net/npm/flatpickr/dist/flatpickr.min.css">
+</head>
+
+<body>
+    <!-- Loading Screen -->
+    <div class="loading-overlay" id="loadingOverlay">
+        <div class="spinner"></div>
+    </div>
+
+    <!-- Alert Popup -->
+    <div class="alert-overlay" id="alertOverlay">
+        <div class="alert-box">
+            <div class="alert-header">
+                <div class="alert-icon" id="alertIcon">
+                    <i class="fas fa-exclamation-circle"></i>
+                </div>
+                <h3 class="alert-title" id="alertTitle">Alert Title</h3>
+            </div>
+            <p class="alert-message" id="alertMessage">Alert message goes here</p>
+            <button class="alert-ok" id="alertOk">OK</button>
+        </div>
+    </div>
+
+    <!-- Transaction Popup -->
+    <div class="popup-overlay" id="popupOverlay">
+        <div class="popup">
+            <div class="popup-header">
+                <h2>Add Transaction</h2>
+                <button class="close-btn" id="closeBtn">&times;</button>
+            </div>
+            <form id="transactionForm">
+                <div class="form-group">
+                    <label for="amount">Amount (Rp)</label>
+                    <input type="text" id="amount" placeholder="Enter amount" required>
+                </div>
+                <div class="form-group">
+                    <label for="description">Description</label>
+                    <input type="text" id="description" placeholder="Enter description" required>
+                </div>
+                <div class="form-group">
+                    <label for="date">Transaction Date</label>
+                    <input type="text" id="date" placeholder="Select date" required>
+                </div>
+                <div class="form-group">
+                    <label for="type">Type</label>
+                    <select id="type" required>
+                        <option value="">Select type</option>
+                        <option value="debit">Debit</option>
+                        <option value="credit">Credit</option>
+                    </select>
+                </div>
+                <button type="submit" class="submit-btn">
+                    <i class="fas fa-plus"></i> Add Transaction
+                </button>
+            </form>
+        </div>
+    </div>
+
+    <div class="container" id="mainContainer">
+        <div class="header">
+            <h1>Moneyory</h1>
+            <button class="add-btn" id="addBtn">
+                <i class="fas fa-plus"></i> Add Transaction
+            </button>
+        </div>
+
+        <div class="transactions">
+            <h2>Recent Transactions</h2>
+            <table class="transactions-table">
+                <thead>
+                    <tr>
+                        <th>Description</th>
+                        <th>Date</th>
+                        <th>Debit</th>
+                        <th>Credit</th>
+                    </tr>
+                </thead>
+                <tbody id="transactionsList">
+                    <!-- Transactions will be added here -->
+                </tbody>
+                <tfoot>
+                    <tr class="final-amount-row">
+                        <td colspan="3">Final Amount</td>
+                        <td class="final-amount" id="finalAmount">Rp. 0</td>
+                    </tr>
+                </tfoot>
+            </table>
+        </div>
+    </div>
+    <script src="https://cdn.jsdelivr.net/npm/flatpickr"></script>
+    <script src="js/scripts.js"></script>
+</body>
+
+</html>
