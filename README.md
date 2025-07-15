@@ -1,6 +1,6 @@
-# 💰 Moneyory
+# 💰 MemoCash
 
-**Moneyory** adalah aplikasi pencatatan keuangan pribadi yang sederhana dan mudah digunakan. Aplikasi ini memungkinkan pengguna untuk mencatat pemasukan dan pengeluaran harian secara praktis, langsung dari browser.
+**MemoCash** adalah aplikasi pencatatan keuangan pribadi yang sederhana dan mudah digunakan. Aplikasi ini memungkinkan pengguna untuk mencatat pemasukan dan pengeluaran harian secara praktis, langsung dari browser.
 
 ## ✨ Fitur Utama
 
