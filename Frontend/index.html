@@ -9,6 +9,7 @@
     <link href="https://cdn.jsdelivr.net/npm/bootstrap@5.2.3/dist/css/bootstrap.min.css" rel="stylesheet">
     <!-- Bootstrap Icons -->
     <link rel="stylesheet" href="https://cdn.jsdelivr.net/npm/bootstrap-icons@1.10.0/font/bootstrap-icons.css">
+    <link rel="stylesheet" href="https://cdn.jsdelivr.net/npm/flatpickr/dist/flatpickr.min.css">
     <style>
         :root {
             --primary-color: #4e73df;
@@ -124,6 +125,10 @@
         .transaction-modal {
             display: none;
         }
+
+        .equal-width {
+            width: 120px;
+        }
     </style>
 </head>
 <body>
@@ -151,25 +156,8 @@
                 <button class="btn btn-success" id="addTransactionBtn">Add Transaction</button>
             </div>
             <div class="card-body">
-                <div class="table-responsive">
-                    <table class="table table-bordered" width="100%" cellspacing="0">
-                        <thead>
-                            <tr>
-                                <th>Date</th>
-                                <th>Description</th>
-                                <th>Amount</th>
-                                <th>Type</th>
-                            </tr>
-                        </thead>
-                        <tbody>
-                            <tr>
-                                <td>2023-05-15</td>
-                                <td>Sample transaction</td>
-                                <td>$100.00</td>
-                                <td>Income</td>
-                            </tr>
-                        </tbody>
-                    </table>
+                <div class="table-responsive" id="transactionContainer">
+                    <!-- Dynamic table -->
                 </div>
             </div>
         </div>
@@ -205,7 +193,7 @@
                     <form id="transactionForm">
                         <div class="mb-3">
                             <label for="transactionDate" class="form-label">Date</label>
-                            <input type="date" class="form-control" id="transactionDate" required>
+                            <input type="text" class="form-control" id="transactionDate" required>
                         </div>
                         <div class="mb-3">
                             <label for="transactionDescription" class="form-label">Description</label>
@@ -213,14 +201,14 @@
                         </div>
                         <div class="mb-3">
                             <label for="transactionAmount" class="form-label">Amount</label>
-                            <input type="number" step="0.01" class="form-control" id="transactionAmount" required>
+                            <input type="text" class="form-control" id="transactionAmount" required>
                         </div>
                         <div class="mb-3">
                             <label for="transactionType" class="form-label">Type</label>
                             <select class="form-select" id="transactionType" required>
-                                <option value="">Select type</option>
-                                <option value="Income">Income</option>
-                                <option value="Expense">Expense</option>
+                                <option value="" disabled selected>Select type</option>
+                                <option value="Debit">Debit</option>
+                                <option value="Credit">Credit</option>
                             </select>
                         </div>
                     </form>
@@ -234,8 +222,8 @@
     </div>
     
     <!-- Bootstrap 5 JS Bundle with Popper -->
-    <script src="https://cdn.jsdelivr.net/npm/bootstrap@5.3.0-alpha1/dist/js/bootstrap.bundle.min.js"></script>
-    
+    <script src="https://cdn.jsdelivr.net/npm/bootstrap@5.2.3/dist/js/bootstrap.bundle.min.js"></script>
+    <script src="https://cdn.jsdelivr.net/npm/flatpickr"></script>
     <script>
         // Wait for DOM to be fully loaded
         document.addEventListener('DOMContentLoaded', function() {
@@ -245,6 +233,8 @@
             // Show loading overlay initially
             const loadingOverlay = document.getElementById('loadingOverlay');
             const mainPage = document.getElementById('mainPage');
+            const amountInput = document.getElementById('transactionAmount');
+            let transactions = [];
             
             // Simulate API loading
             setTimeout(() => {
@@ -304,9 +294,69 @@
                             // Redirect to transaction page
                             document.getElementById('mainPage').style.display = 'none';
                             document.getElementById('transactionPage').style.display = 'block';
+                            loadTransactions();
                         }
                     });
                 });
+            }
+
+            function loadTransactions() {
+                const container = document.getElementById('transactionContainer');
+
+                if (transactions.length === 0) {
+                    container.innerHTML = `
+                        <div class="text-center py-5 text-muted">No transactions available.</div>
+                    `;
+                    return;
+                }
+
+                const table = document.createElement('table');
+                table.className = 'table table-bordered';
+                table.innerHTML = `
+                    <thead>
+                        <tr>
+                            <th>Date</th>
+                            <th>Description</th>
+                            <th>Debit</th>
+                            <th>Credit</th>
+                        </tr>
+                    </thead>
+                    <tbody id="transactionTableBody">
+                        ${transactions.map(tx => `
+                            <tr>
+                                <td>${tx.date}</td>
+                                <td>${tx.description}</td>
+                                <td class="text-end equal-width">${tx.type === 'Debit' ? formatAmount(tx.amount) : ''}</td>
+                                <td class="text-end equal-width">${tx.type === 'Credit' ? formatAmount(tx.amount) : ''}</td>
+                            </tr>
+                        `).join('')}
+                    </tbody>
+                    <tfoot>
+                        <tr>
+                            <th colspan="2" class="text-end">Balance:</th>
+                            <th colspan="2" class="text-end" id="finalBalance">${formatAmount(computeBalance())}</th>
+                        </tr>
+                    </tfoot>
+                `;
+                container.innerHTML = '';
+                container.appendChild(table);
+            }
+
+            function formatAmount(num) {
+                //return `$${Number(num).toLocaleString('en-US', { minimumFractionDigits: 2 })}`;
+                return new Intl.NumberFormat('id-ID', {
+                    style: 'currency',
+                    currency: 'IDR',
+                    minimumFractionDigits: 2
+                }).format(num);
+            }
+
+            function computeBalance() {
+                let total = 0;
+                transactions.forEach(tx => {
+                    total += tx.type === 'Credit' ? tx.amount : -tx.amount;
+                });
+                return total;
             }
             
             // Show alert function
@@ -325,6 +375,24 @@
                 
                 alertModal.style.display = 'flex';
             }
+
+            function updateFinalBalance() {
+                const rows = document.querySelectorAll('#transactionTableBody tr');
+                let total = 0;
+
+                rows.forEach(row => {
+                    const debitCell = row.children[2].textContent.replace(/[^0-9.-]+/g, '');
+                    const creditCell = row.children[3].textContent.replace(/[^0-9.-]+/g, '');
+
+                    const debit = parseFloat(debitCell) || 0;
+                    const credit = parseFloat(creditCell) || 0;
+
+                    total += credit - debit;
+                });
+
+                const balanceCell = document.getElementById('finalBalance');
+                balanceCell.textContent = formatAmount(total); //`$${total.toLocaleString('en-US', { minimumFractionDigits: 2 })}`;
+            }
             
             // Close alert
             document.getElementById('closeAlert').addEventListener('click', function() {
@@ -339,15 +407,77 @@
             
             // Add transaction button
             document.getElementById('addTransactionBtn').addEventListener('click', function() {
+                // Reset form before showing
+                document.getElementById('transactionForm').reset();
+
+                // Ensure the "Select type" option is re-selected
+                const typeSelect = document.getElementById('transactionType');
+                typeSelect.selectedIndex = 0;
+
+                // Show modal
                 addTransactionModal.show();
             });
             
             // Submit transaction
             document.getElementById('submitTransaction').addEventListener('click', function() {
-                // Here you would typically send data to server
-                // For demo, we'll just close the modal
+                const date = document.getElementById('transactionDate').value;
+                const desc = document.getElementById('transactionDescription').value;
+                const type = document.getElementById('transactionType').value;
+                //const amountRaw = amountInput.value.replace(/,/g, '');
+                //const amount = parseFloat(amountRaw);
+
+                const amountRaw = amountInput.value.replace(/[^0-9]/g, '');
+                const amount = parseFloat(amountRaw);
+
+                if (!date || !desc || !type || isNaN(amount)) {
+                    showAlert('Please complete the form correctly.', 'error');
+                    return;
+                }
+
+                // Save to in-memory array
+                transactions.push({ date, description: desc, type, amount });
+
+                // Refresh table
+                loadTransactions();
+
+                // Reset form
+                document.getElementById('transactionForm').reset();
+                amountInput.dataset.rawValue = '';
                 addTransactionModal.hide();
                 showAlert('Transaction added successfully!', 'success');
+            });
+
+            if (amountInput) {
+                amountInput.addEventListener('input', function (e) {
+                    let rawValue = e.target.value.replace(/[^0-9]/g, '');
+                    if (!rawValue) {
+                        e.target.value = '';
+                        return;
+                    }
+
+                    const number = parseFloat(rawValue);
+                    if (!isNaN(number)) {
+                        const formatted = new Intl.NumberFormat('id-ID', {
+                            style: 'currency',
+                            currency: 'IDR',
+                            minimumFractionDigits: 2
+                        }).format(number);
+
+                        e.target.value = formatted;
+                    }
+                });
+
+                amountInput.addEventListener('blur', function () {
+                    // Store raw value (numeric only, no "Rp", ".", etc.)
+                    const raw = amountInput.value.replace(/[^0-9]/g, '');
+                    amountInput.dataset.rawValue = raw;
+                });
+            }
+
+
+            flatpickr("#transactionDate", {
+                dateFormat: "d-m-Y",
+                defaultDate: "today"
             });
         });
     </script>
