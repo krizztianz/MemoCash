@@ -1,87 +1,355 @@
 <!DOCTYPE html>
 <html lang="en">
-
 <head>
     <meta charset="UTF-8">
     <meta name="viewport" content="width=device-width, initial-scale=1.0">
-    <title>Moneyory</title>
-    <link rel="stylesheet" href="css/styles.css">
-    <link rel="stylesheet" href="https://cdnjs.cloudflare.com/ajax/libs/font-awesome/6.0.0-beta3/css/all.min.css">
-    <link rel="stylesheet" href="https://cdn.jsdelivr.net/npm/flatpickr/dist/flatpickr.min.css">
+    <title>MemoCash</title>
+    <!-- Bootstrap 5 CSS -->
+    <!-- <link href="https://cdn.jsdelivr.net/npm/bootstrap@5.3.0-alpha1/dist/css/bootstrap.min.css" rel="stylesheet"> -->
+    <link href="https://cdn.jsdelivr.net/npm/bootstrap@5.2.3/dist/css/bootstrap.min.css" rel="stylesheet">
+    <!-- Bootstrap Icons -->
+    <link rel="stylesheet" href="https://cdn.jsdelivr.net/npm/bootstrap-icons@1.10.0/font/bootstrap-icons.css">
+    <style>
+        :root {
+            --primary-color: #4e73df;
+            --secondary-color: #f8f9fc;
+            --danger-color: #e74a3b;
+            --success-color: #1cc88a;
+        }
+        
+        body {
+            background-color: var(--secondary-color);
+            font-family: 'Segoe UI', Tahoma, Geneva, Verdana, sans-serif;
+        }
+        
+        .book-card {
+            cursor: pointer;
+            transition: all 0.3s ease;
+            height: 100%;
+            display: flex;
+            flex-direction: column;
+            justify-content: center;
+            align-items: center;
+            padding: 20px;
+            border-radius: 10px;
+            background-color: white;
+            box-shadow: 0 4px 6px rgba(0, 0, 0, 0.1);
+        }
+        
+        .book-card:hover {
+            transform: translateY(-5px);
+            box-shadow: 0 6px 12px rgba(0, 0, 0, 0.15);
+        }
+        
+        .book-card.locked {
+            background-color: #f8f9fa;
+            color: #6c757d;
+        }
+        
+        .book-icon {
+            font-size: 3rem;
+            margin-bottom: 15px;
+        }
+        
+        .book-title {
+            font-weight: 600;
+            text-align: center;
+        }
+        
+        .loading-overlay {
+            position: fixed;
+            top: 0;
+            left: 0;
+            width: 100%;
+            height: 100%;
+            background-color: rgba(255, 255, 255, 0.8);
+            display: flex;
+            justify-content: center;
+            align-items: center;
+            z-index: 9999;
+        }
+        
+        .spinner {
+            width: 3rem;
+            height: 3rem;
+        }
+        
+        .blur-content {
+            filter: blur(5px);
+            pointer-events: none;
+        }
+        
+        /* Alert modal styles */
+        .alert-modal {
+            display: none;
+            position: fixed;
+            top: 0;
+            left: 0;
+            width: 100%;
+            height: 100%;
+            background-color: rgba(0, 0, 0, 0.5);
+            z-index: 10000;
+            justify-content: center;
+            align-items: center;
+        }
+        
+        .alert-content {
+            background-color: white;
+            padding: 30px;
+            border-radius: 10px;
+            max-width: 400px;
+            width: 90%;
+            text-align: center;
+        }
+        
+        .alert-icon {
+            font-size: 4rem;
+            margin-bottom: 20px;
+        }
+        
+        .alert-icon.error {
+            color: var(--danger-color);
+        }
+        
+        .alert-icon.success {
+            color: var(--success-color);
+        }
+        
+        /* Transaction page styles */
+        #transactionPage {
+            display: none;
+        }
+        
+        /* Transaction modal styles */
+        .transaction-modal {
+            display: none;
+        }
+    </style>
 </head>
-
 <body>
-    <!-- Loading Screen -->
-    <div class="loading-overlay" id="loadingOverlay">
-        <div class="spinner"></div>
-    </div>
-
-    <!-- Alert Popup -->
-    <div class="alert-overlay" id="alertOverlay">
-        <div class="alert-box">
-            <div class="alert-header">
-                <div class="alert-icon" id="alertIcon">
-                    <i class="fas fa-exclamation-circle"></i>
-                </div>
-                <h3 class="alert-title" id="alertTitle">Alert Title</h3>
-            </div>
-            <p class="alert-message" id="alertMessage">Alert message goes here</p>
-            <button class="alert-ok" id="alertOk">OK</button>
-        </div>
-    </div>
-
-    <!-- Add Period Popup -->
-    <div class="popup-overlay" id="periodPopup">
-        <div class="popup">
-            <div class="popup-header">
-                <h2>Add Period</h2>
-                <button class="close-btn" id="closePeriodBtn">&times;</button>
-            </div>
-            <form id="periodForm">
-                <div class="form-group">
-                    <label for="month">Month</label>
-                    <select id="month" required>
-                        <option value="">Select month</option>
-                        <option value="1">January</option>
-                        <option value="2">February</option>
-                        <option value="3">March</option>
-                        <option value="4">April</option>
-                        <option value="5">May</option>
-                        <option value="6">June</option>
-                        <option value="7">July</option>
-                        <option value="8">August</option>
-                        <option value="9">September</option>
-                        <option value="10">October</option>
-                        <option value="11">November</option>
-                        <option value="12">December</option>
-                    </select>
-                </div>
-                <div class="form-group">
-                    <label for="year">Year</label>
-                    <select id="year" required></select>
-                </div>
-                <button type="submit" class="submit-btn">
-                    <i class="fas fa-save"></i> Save Period
-                </button>
-            </form>
-        </div>
-    </div>
-
-    <div class="container" id="mainContainer">
-        <div class="header">
-            <h1>Moneyory</h1>
-            <button class="add-period-btn" id="addPeriodBtn">
-                <i class="fas fa-calendar-plus"></i> Add Period
-            </button>
-        </div>
-
-        <div class="months-grid">
+    <!-- Main Page -->
+    <div id="mainPage">
+        <div class="container py-5">
+            <h1 class="text-center mb-5">MemoCash</h1>
             
+            <div class="row row-cols-1 row-cols-sm-2 row-cols-md-3 row-cols-lg-4 g-4" id="booksGrid">
+                <!-- Books will be loaded here -->
+            </div>
         </div>
-
     </div>
-    <script src="https://cdn.jsdelivr.net/npm/flatpickr"></script>
-    <script src="js/scripts.js"></script>
+    
+    <!-- Transaction Page (hidden by default) -->
+    <div id="transactionPage" class="container py-5">
+        <div class="d-flex justify-content-between align-items-center mb-4">
+            <h1>Transaction Details</h1>
+            <button class="btn btn-primary" id="backToBooks">Back to Books</button>
+        </div>
+        
+        <div class="card shadow mb-4">
+            <div class="card-header py-3 d-flex justify-content-between align-items-center">
+                <h6 class="m-0 font-weight-bold text-primary">Transactions</h6>
+                <button class="btn btn-success" id="addTransactionBtn">Add Transaction</button>
+            </div>
+            <div class="card-body">
+                <div class="table-responsive">
+                    <table class="table table-bordered" width="100%" cellspacing="0">
+                        <thead>
+                            <tr>
+                                <th>Date</th>
+                                <th>Description</th>
+                                <th>Amount</th>
+                                <th>Type</th>
+                            </tr>
+                        </thead>
+                        <tbody>
+                            <tr>
+                                <td>2023-05-15</td>
+                                <td>Sample transaction</td>
+                                <td>$100.00</td>
+                                <td>Income</td>
+                            </tr>
+                        </tbody>
+                    </table>
+                </div>
+            </div>
+        </div>
+    </div>
+    
+    <!-- Loading Overlay -->
+    <div class="loading-overlay" id="loadingOverlay">
+        <div class="spinner-border text-primary" role="status">
+            <span class="visually-hidden">Loading...</span>
+        </div>
+    </div>
+    
+    <!-- Alert Modal -->
+    <div class="alert-modal" id="alertModal">
+        <div class="alert-content">
+            <div class="alert-icon error" id="alertIcon">
+                <i class="bi bi-exclamation-triangle-fill"></i>
+            </div>
+            <h4 id="alertMessage">This book is locked!</h4>
+            <button class="btn btn-primary mt-3" id="closeAlert">OK</button>
+        </div>
+    </div>
+    
+    <!-- Add Transaction Modal -->
+    <div class="modal fade transaction-modal" id="addTransactionModal" tabindex="-1" aria-labelledby="addTransactionModalLabel" aria-hidden="true">
+        <div class="modal-dialog">
+            <div class="modal-content">
+                <div class="modal-header">
+                    <h5 class="modal-title" id="addTransactionModalLabel">Add Transaction</h5>
+                    <button type="button" class="btn-close" data-bs-dismiss="modal" aria-label="Close"></button>
+                </div>
+                <div class="modal-body">
+                    <form id="transactionForm">
+                        <div class="mb-3">
+                            <label for="transactionDate" class="form-label">Date</label>
+                            <input type="date" class="form-control" id="transactionDate" required>
+                        </div>
+                        <div class="mb-3">
+                            <label for="transactionDescription" class="form-label">Description</label>
+                            <input type="text" class="form-control" id="transactionDescription" required>
+                        </div>
+                        <div class="mb-3">
+                            <label for="transactionAmount" class="form-label">Amount</label>
+                            <input type="number" step="0.01" class="form-control" id="transactionAmount" required>
+                        </div>
+                        <div class="mb-3">
+                            <label for="transactionType" class="form-label">Type</label>
+                            <select class="form-select" id="transactionType" required>
+                                <option value="">Select type</option>
+                                <option value="Income">Income</option>
+                                <option value="Expense">Expense</option>
+                            </select>
+                        </div>
+                    </form>
+                </div>
+                <div class="modal-footer">
+                    <button type="button" class="btn btn-secondary" data-bs-dismiss="modal">Cancel</button>
+                    <button type="button" class="btn btn-primary" id="submitTransaction">Submit</button>
+                </div>
+            </div>
+        </div>
+    </div>
+    
+    <!-- Bootstrap 5 JS Bundle with Popper -->
+    <script src="https://cdn.jsdelivr.net/npm/bootstrap@5.3.0-alpha1/dist/js/bootstrap.bundle.min.js"></script>
+    
+    <script>
+        // Wait for DOM to be fully loaded
+        document.addEventListener('DOMContentLoaded', function() {
+            // Initialize Bootstrap modal
+            const addTransactionModal = new bootstrap.Modal(document.getElementById('addTransactionModal'));
+            
+            // Show loading overlay initially
+            const loadingOverlay = document.getElementById('loadingOverlay');
+            const mainPage = document.getElementById('mainPage');
+            
+            // Simulate API loading
+            setTimeout(() => {
+                loadBooks();
+                loadingOverlay.style.display = 'none';
+                mainPage.classList.remove('blur-content');
+            }, 1500);
+            
+            // Load books function
+            function loadBooks() {
+                const booksGrid = document.getElementById('booksGrid');
+                booksGrid.innerHTML = '';
+                
+                // Sample book data - in a real app, this would come from an API
+                const books = [
+                    { id: 1, title: 'Personal Finance', locked: false },
+                    { id: 2, title: 'Business Accounts', locked: true },
+                    { id: 3, title: 'Savings', locked: false },
+                    { id: 4, title: 'Investments', locked: true },
+                    { id: 5, title: 'Vacation Fund', locked: false },
+                    { id: 6, title: 'Education', locked: true },
+                    { id: 7, title: 'Emergency Fund', locked: false },
+                    { id: 8, title: 'Retirement', locked: true }
+                ];
+                
+                books.forEach(book => {
+                    const bookCol = document.createElement('div');
+                    bookCol.className = 'col';
+                    
+                    const bookCard = document.createElement('div');
+                    bookCard.className = `book-card ${book.locked ? 'locked' : ''}`;
+                    bookCard.dataset.id = book.id;
+                    
+                    const bookIcon = document.createElement('div');
+                    bookIcon.className = 'book-icon';
+                    
+                    if (book.locked) {
+                        bookIcon.innerHTML = '<i class="bi bi-lock-fill"></i>';
+                    } else {
+                        bookIcon.innerHTML = '<i class="bi bi-journal-bookmark-fill text-primary"></i>';
+                    }
+                    
+                    const bookTitle = document.createElement('h5');
+                    bookTitle.className = 'book-title';
+                    bookTitle.textContent = book.title;
+                    
+                    bookCard.appendChild(bookIcon);
+                    bookCard.appendChild(bookTitle);
+                    bookCol.appendChild(bookCard);
+                    booksGrid.appendChild(bookCol);
+                    
+                    // Add click event
+                    bookCard.addEventListener('click', function() {
+                        if (book.locked) {
+                            showAlert('This book is locked and cannot be accessed.', 'error');
+                        } else {
+                            // Redirect to transaction page
+                            document.getElementById('mainPage').style.display = 'none';
+                            document.getElementById('transactionPage').style.display = 'block';
+                        }
+                    });
+                });
+            }
+            
+            // Show alert function
+            function showAlert(message, iconType) {
+                const alertModal = document.getElementById('alertModal');
+                const alertMessage = document.getElementById('alertMessage');
+                const alertIcon = document.getElementById('alertIcon');
+                
+                alertMessage.textContent = message;
+                
+                // Set icon based on type
+                alertIcon.className = 'alert-icon ' + iconType;
+                alertIcon.innerHTML = iconType === 'error' 
+                    ? '<i class="bi bi-exclamation-triangle-fill"></i>'
+                    : '<i class="bi bi-check-circle-fill"></i>';
+                
+                alertModal.style.display = 'flex';
+            }
+            
+            // Close alert
+            document.getElementById('closeAlert').addEventListener('click', function() {
+                document.getElementById('alertModal').style.display = 'none';
+            });
+            
+            // Back to books button
+            document.getElementById('backToBooks').addEventListener('click', function() {
+                document.getElementById('mainPage').style.display = 'block';
+                document.getElementById('transactionPage').style.display = 'none';
+            });
+            
+            // Add transaction button
+            document.getElementById('addTransactionBtn').addEventListener('click', function() {
+                addTransactionModal.show();
+            });
+            
+            // Submit transaction
+            document.getElementById('submitTransaction').addEventListener('click', function() {
+                // Here you would typically send data to server
+                // For demo, we'll just close the modal
+                addTransactionModal.hide();
+                showAlert('Transaction added successfully!', 'success');
+            });
+        });
+    </script>
 </body>
-
 </html>
