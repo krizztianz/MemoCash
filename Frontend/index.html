@@ -1,5 +1,6 @@
 <!DOCTYPE html>
 <html lang="en">
+
 <head>
     <meta charset="UTF-8">
     <meta name="viewport" content="width=device-width, initial-scale=1.0">
@@ -17,12 +18,12 @@
             --danger-color: #e74a3b;
             --success-color: #1cc88a;
         }
-        
+
         body {
             background-color: var(--secondary-color);
             font-family: 'Segoe UI', Tahoma, Geneva, Verdana, sans-serif;
         }
-        
+
         .book-card {
             cursor: pointer;
             transition: all 0.3s ease;
@@ -36,27 +37,27 @@
             background-color: white;
             box-shadow: 0 4px 6px rgba(0, 0, 0, 0.1);
         }
-        
+
         .book-card:hover {
             transform: translateY(-5px);
             box-shadow: 0 6px 12px rgba(0, 0, 0, 0.15);
         }
-        
+
         .book-card.locked {
             background-color: #f8f9fa;
             color: #6c757d;
         }
-        
+
         .book-icon {
             font-size: 3rem;
             margin-bottom: 15px;
         }
-        
+
         .book-title {
             font-weight: 600;
             text-align: center;
         }
-        
+
         .loading-overlay {
             position: fixed;
             top: 0;
@@ -69,17 +70,17 @@
             align-items: center;
             z-index: 9999;
         }
-        
+
         .spinner {
             width: 3rem;
             height: 3rem;
         }
-        
+
         .blur-content {
             filter: blur(5px);
             pointer-events: none;
         }
-        
+
         /* Alert modal styles */
         .alert-modal {
             display: none;
@@ -93,7 +94,7 @@
             justify-content: center;
             align-items: center;
         }
-        
+
         .alert-content {
             background-color: white;
             padding: 30px;
@@ -102,25 +103,25 @@
             width: 90%;
             text-align: center;
         }
-        
+
         .alert-icon {
             font-size: 4rem;
             margin-bottom: 20px;
         }
-        
+
         .alert-icon.error {
             color: var(--danger-color);
         }
-        
+
         .alert-icon.success {
             color: var(--success-color);
         }
-        
+
         /* Transaction page styles */
         #transactionPage {
             display: none;
         }
-        
+
         /* Transaction modal styles */
         .transaction-modal {
             display: none;
@@ -131,25 +132,26 @@
         }
     </style>
 </head>
+
 <body>
     <!-- Main Page -->
     <div id="mainPage">
         <div class="container py-5">
             <h1 class="text-center mb-5">MemoCash</h1>
-            
+
             <div class="row row-cols-1 row-cols-sm-2 row-cols-md-3 row-cols-lg-4 g-4" id="booksGrid">
                 <!-- Books will be loaded here -->
             </div>
         </div>
     </div>
-    
+
     <!-- Transaction Page (hidden by default) -->
     <div id="transactionPage" class="container py-5">
         <div class="d-flex justify-content-between align-items-center mb-4">
             <h1>Transaction Details</h1>
             <button class="btn btn-primary" id="backToBooks">Back to Books</button>
         </div>
-        
+
         <div class="card shadow mb-4">
             <div class="card-header py-3 d-flex justify-content-between align-items-center">
                 <h6 class="m-0 font-weight-bold text-primary">Transactions</h6>
@@ -162,14 +164,14 @@
             </div>
         </div>
     </div>
-    
+
     <!-- Loading Overlay -->
     <div class="loading-overlay" id="loadingOverlay">
         <div class="spinner-border text-primary" role="status">
             <span class="visually-hidden">Loading...</span>
         </div>
     </div>
-    
+
     <!-- Alert Modal -->
     <div class="alert-modal" id="alertModal">
         <div class="alert-content">
@@ -180,9 +182,10 @@
             <button class="btn btn-primary mt-3" id="closeAlert">OK</button>
         </div>
     </div>
-    
+
     <!-- Add Transaction Modal -->
-    <div class="modal fade transaction-modal" id="addTransactionModal" tabindex="-1" aria-labelledby="addTransactionModalLabel" aria-hidden="true">
+    <div class="modal fade transaction-modal" id="addTransactionModal" tabindex="-1"
+        aria-labelledby="addTransactionModalLabel" aria-hidden="true">
         <div class="modal-dialog">
             <div class="modal-content">
                 <div class="modal-header">
@@ -220,34 +223,56 @@
             </div>
         </div>
     </div>
-    
+
     <!-- Bootstrap 5 JS Bundle with Popper -->
     <script src="https://cdn.jsdelivr.net/npm/bootstrap@5.2.3/dist/js/bootstrap.bundle.min.js"></script>
     <script src="https://cdn.jsdelivr.net/npm/flatpickr"></script>
+    <script src="https://cdn.jsdelivr.net/npm/cleave.js@1.6.0/dist/cleave.min.js"></script>
+    <script>
+        flatpickr("#transactionDate", {
+            dateFormat: "d-m-Y",
+            defaultDate: "today"
+        });
+
+        let cleaveAmount;
+    </script>
     <script>
         // Wait for DOM to be fully loaded
-        document.addEventListener('DOMContentLoaded', function() {
+        document.addEventListener('DOMContentLoaded', function () {
             // Initialize Bootstrap modal
             const addTransactionModal = new bootstrap.Modal(document.getElementById('addTransactionModal'));
-            
+
             // Show loading overlay initially
             const loadingOverlay = document.getElementById('loadingOverlay');
             const mainPage = document.getElementById('mainPage');
             const amountInput = document.getElementById('transactionAmount');
+            cleaveAmount = new Cleave('#transactionAmount', {
+                numeral: true,
+                numeralThousandsGroupStyle: 'thousand',
+                numeralDecimalMark: ',',
+                delimiter: '.',
+                prefix: 'Rp ',
+                rawValueTrimPrefix: true,
+                numeralDecimalScale: 2
+            });
             let transactions = [];
-            
+
+            document.getElementById('addTransactionModal').addEventListener('hidden.bs.modal', function () {
+                cleaveAmount.setRawValue('');
+            });
+
             // Simulate API loading
             setTimeout(() => {
                 loadBooks();
                 loadingOverlay.style.display = 'none';
                 mainPage.classList.remove('blur-content');
             }, 1500);
-            
+
             // Load books function
             function loadBooks() {
                 const booksGrid = document.getElementById('booksGrid');
                 booksGrid.innerHTML = '';
-                
+
                 // Sample book data - in a real app, this would come from an API
                 const books = [
                     { id: 1, title: 'Personal Finance', locked: false },
@@ -259,35 +284,35 @@
                     { id: 7, title: 'Emergency Fund', locked: false },
                     { id: 8, title: 'Retirement', locked: true }
                 ];
-                
+
                 books.forEach(book => {
                     const bookCol = document.createElement('div');
                     bookCol.className = 'col';
-                    
+
                     const bookCard = document.createElement('div');
                     bookCard.className = `book-card ${book.locked ? 'locked' : ''}`;
                     bookCard.dataset.id = book.id;
-                    
+
                     const bookIcon = document.createElement('div');
                     bookIcon.className = 'book-icon';
-                    
+
                     if (book.locked) {
                         bookIcon.innerHTML = '<i class="bi bi-lock-fill"></i>';
                     } else {
                         bookIcon.innerHTML = '<i class="bi bi-journal-bookmark-fill text-primary"></i>';
                     }
-                    
+
                     const bookTitle = document.createElement('h5');
                     bookTitle.className = 'book-title';
                     bookTitle.textContent = book.title;
-                    
+
                     bookCard.appendChild(bookIcon);
                     bookCard.appendChild(bookTitle);
                     bookCol.appendChild(bookCard);
                     booksGrid.appendChild(bookCol);
-                    
+
                     // Add click event
-                    bookCard.addEventListener('click', function() {
+                    bookCard.addEventListener('click', function () {
                         if (book.locked) {
                             showAlert('This book is locked and cannot be accessed.', 'error');
                         } else {
@@ -358,21 +383,21 @@
                 });
                 return total;
             }
-            
+
             // Show alert function
             function showAlert(message, iconType) {
                 const alertModal = document.getElementById('alertModal');
                 const alertMessage = document.getElementById('alertMessage');
                 const alertIcon = document.getElementById('alertIcon');
-                
+
                 alertMessage.textContent = message;
-                
+
                 // Set icon based on type
                 alertIcon.className = 'alert-icon ' + iconType;
-                alertIcon.innerHTML = iconType === 'error' 
+                alertIcon.innerHTML = iconType === 'error'
                     ? '<i class="bi bi-exclamation-triangle-fill"></i>'
                     : '<i class="bi bi-check-circle-fill"></i>';
-                
+
                 alertModal.style.display = 'flex';
             }
 
@@ -393,20 +418,20 @@
                 const balanceCell = document.getElementById('finalBalance');
                 balanceCell.textContent = formatAmount(total); //`$${total.toLocaleString('en-US', { minimumFractionDigits: 2 })}`;
             }
-            
+
             // Close alert
-            document.getElementById('closeAlert').addEventListener('click', function() {
+            document.getElementById('closeAlert').addEventListener('click', function () {
                 document.getElementById('alertModal').style.display = 'none';
             });
-            
+
             // Back to books button
-            document.getElementById('backToBooks').addEventListener('click', function() {
+            document.getElementById('backToBooks').addEventListener('click', function () {
                 document.getElementById('mainPage').style.display = 'block';
                 document.getElementById('transactionPage').style.display = 'none';
             });
-            
+
             // Add transaction button
-            document.getElementById('addTransactionBtn').addEventListener('click', function() {
+            document.getElementById('addTransactionBtn').addEventListener('click', function () {
                 // Reset form before showing
                 document.getElementById('transactionForm').reset();
 
@@ -417,17 +442,16 @@
                 // Show modal
                 addTransactionModal.show();
             });
-            
+
             // Submit transaction
-            document.getElementById('submitTransaction').addEventListener('click', function() {
+            document.getElementById('submitTransaction').addEventListener('click', function () {
                 const date = document.getElementById('transactionDate').value;
                 const desc = document.getElementById('transactionDescription').value;
                 const type = document.getElementById('transactionType').value;
                 //const amountRaw = amountInput.value.replace(/,/g, '');
                 //const amount = parseFloat(amountRaw);
 
-                const amountRaw = amountInput.value.replace(/[^0-9]/g, '');
-                const amount = parseFloat(amountRaw);
+                const amount = parseFloat(cleaveAmount.getRawValue());
 
                 if (!date || !desc || !type || isNaN(amount)) {
                     showAlert('Please complete the form correctly.', 'error');
@@ -446,40 +470,8 @@
                 addTransactionModal.hide();
                 showAlert('Transaction added successfully!', 'success');
             });
-
-            if (amountInput) {
-                amountInput.addEventListener('input', function (e) {
-                    let rawValue = e.target.value.replace(/[^0-9]/g, '');
-                    if (!rawValue) {
-                        e.target.value = '';
-                        return;
-                    }
-
-                    const number = parseFloat(rawValue);
-                    if (!isNaN(number)) {
-                        const formatted = new Intl.NumberFormat('id-ID', {
-                            style: 'currency',
-                            currency: 'IDR',
-                            minimumFractionDigits: 2
-                        }).format(number);
-
-                        e.target.value = formatted;
-                    }
-                });
-
-                amountInput.addEventListener('blur', function () {
-                    // Store raw value (numeric only, no "Rp", ".", etc.)
-                    const raw = amountInput.value.replace(/[^0-9]/g, '');
-                    amountInput.dataset.rawValue = raw;
-                });
-            }
-
-
-            flatpickr("#transactionDate", {
-                dateFormat: "d-m-Y",
-                defaultDate: "today"
-            });
         });
     </script>
 </body>
+
 </html>
