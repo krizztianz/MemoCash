@@ -229,6 +229,34 @@
     <script src="https://cdn.jsdelivr.net/npm/flatpickr"></script>
     <script src="https://cdn.jsdelivr.net/npm/cleave.js@1.6.0/dist/cleave.min.js"></script>
     <script>
+        function fetchJSON(url, options) {
+            options = options || {};
+
+            // Set default headers
+            var headers = options.headers || {};
+            headers['Content-Type'] = headers['Content-Type'] || 'application/json';
+            options.headers = headers;
+
+            return fetch(url, options)
+                .then(function (response) {
+                    var contentType = response.headers.get('content-type');
+                    var isJSON = contentType && contentType.indexOf('application/json') !== -1;
+
+                    var dataPromise = isJSON ? response.json() : response.text();
+
+                    return dataPromise.then(function (data) {
+                        if (!response.ok) {
+                            var error = new Error('HTTP error! Status: ' + response.status);
+                            error.status = response.status;
+                            error.body = data;
+                            throw error;
+                        }
+                        return data;
+                    });
+                });
+        }
+    </script>
+    <script>
         flatpickr("#transactionDate", {
             dateFormat: "d-m-Y",
             defaultDate: "today"
@@ -445,28 +473,59 @@
 
             // Submit transaction
             document.getElementById('submitTransaction').addEventListener('click', function () {
-                const date = document.getElementById('transactionDate').value;
-                const desc = document.getElementById('transactionDescription').value;
-                const type = document.getElementById('transactionType').value;
-                //const amountRaw = amountInput.value.replace(/,/g, '');
-                //const amount = parseFloat(amountRaw);
+                const form = document.getElementById('transactionForm');
+                const dateInput = document.getElementById('transactionDate');
+                const descInput = document.getElementById('transactionDescription');
+                const amountInput = document.getElementById('transactionAmount');
+                const typeInput = document.getElementById('transactionType');
 
                 const amount = parseFloat(cleaveAmount.getRawValue());
 
-                if (!date || !desc || !type || isNaN(amount)) {
+                // Reset all validation states
+                [dateInput, descInput, amountInput, typeInput].forEach(el => el.classList.remove('is-invalid'));
+
+                // Validation checks
+                let isValid = true;
+
+                if (!dateInput.value.trim()) {
+                    dateInput.classList.add('is-invalid');
+                    isValid = false;
+                }
+
+                if (!descInput.value.trim()) {
+                    descInput.classList.add('is-invalid');
+                    isValid = false;
+                }
+
+                if (isNaN(amount) || amount <= 0) {
+                    amountInput.classList.add('is-invalid');
+                    isValid = false;
+                }
+
+                if (!typeInput.value) {
+                    typeInput.classList.add('is-invalid');
+                    isValid = false;
+                }
+
+                if (!isValid) {
                     showAlert('Please complete the form correctly.', 'error');
                     return;
                 }
 
                 // Save to in-memory array
-                transactions.push({ date, description: desc, type, amount });
+                transactions.push({
+                    date: dateInput.value,
+                    description: descInput.value,
+                    type: typeInput.value,
+                    amount
+                });
 
                 // Refresh table
                 loadTransactions();
 
-                // Reset form
-                document.getElementById('transactionForm').reset();
-                amountInput.dataset.rawValue = '';
+                // Reset form and modal
+                form.reset();
+                cleaveAmount.setRawValue('');
                 addTransactionModal.hide();
                 showAlert('Transaction added successfully!', 'success');
             });
